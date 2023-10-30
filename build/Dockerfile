@@ -10,7 +10,7 @@ RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
 # Copy the project files into the container
 WORKDIR $GOPATH/src/github.com/NethermindEth/starknet-proposals-whisperer
-COPY .. .
+COPY . .
 
 # Build the Go binary
 RUN GOOS=linux GOARCH=amd64 go build -o ./bin/whisperer
