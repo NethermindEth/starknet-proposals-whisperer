@@ -3,7 +3,8 @@ name: Deploy to AWS Lambda
 on:
   push:
     branches:
-      - main 
+      - main
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -34,6 +35,7 @@ jobs:
         aws lambda update-function-configuration \
         --function-name starknet-proposals-whisperer \
         --region us-east-2 \
+        --handler main \
         --environment Variables="{\
         SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }},\
         REPO_OWNER=${{ vars.REPO_OWNER }},\
