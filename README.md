@@ -1,5 +1,13 @@
 # Starknet Proposals Whisperer
 
+- [Starknet Proposals Whisperer](#starknet-proposals-whisperer)
+  - [Project Description](#project-description)
+  - [What the Code Does](#what-the-code-does)
+  - [AWS Lambda Deployment](#aws-lambda-deployment)
+  - [How to Update the Code and Trigger CI/CD](#how-to-update-the-code-and-trigger-cicd)
+
+![Example](images/example.png)
+
 ## Project Description
 
 The Starknet Proposals Whisperer is a Slack bot designed to keep your team updated on new Starknet Proposals. It listens for new pull requests in a specified GitHub repository and sends notifications to a Slack channel. This bot aims to streamline the process of keeping track of new proposals, ensuring that your team is always in the loop.

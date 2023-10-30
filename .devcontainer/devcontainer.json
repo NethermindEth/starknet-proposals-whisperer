@@ -14,7 +14,8 @@
 				"DavidAnson.vscode-markdownlint",
 				"GitHub.vscode-pull-request-github",
 				"github.vscode-github-actions",
-				"unifiedjs.vscode-mdx"
+				"unifiedjs.vscode-mdx",
+				"yzhang.markdown-all-in-one"
 			]
 		}
 	},
