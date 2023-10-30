@@ -18,17 +18,29 @@ jobs:
       with:
         go-version: 1.21.2
 
+    - name: Configure AWS Credentials
+      run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set aws_session_token ${{ secrets.AWS_SESSION_TOKEN }}
+          aws configure set region us-east-2
+
     - name: Build and Compress
       run: |
-        make build-linux
+          make build-linux
 
     - name: Deploy to AWS Lambda
-      uses: appleboy/lambda-action@v0.1.9
-      with:
-        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws_region: us-east-2  # Adjust with your AWS region
-        function_name: starknet-proposals-whisperer  # Adjust with your Lambda function name
-        zip_file: compressed/whisperer.zip
-        environment: SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }},REPO_OWNER=${{ vars.REPO_OWNER }},REPO_NAME=${{ vars.REPO_NAME }},THRESHOLD_DAYS=${{ vars.THRESHOLD_DAYS }}
-
+      run: |
+        aws lambda update-function-configuration \
+        --function-name whisperer \
+        --region us-east-2 \
+        --environment Variables="{\
+          SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }},\
+          REPO_OWNER=${{ vars.REPO_OWNER }},\
+          REPO_NAME=${{ vars.REPO_NAME }},\
+          THRESHOLD_DAYS=${{ vars.THRESHOLD_DAYS }}\
+        }" \
+        aws lambda update-function-code \
+        --function-name starknet-proposals-whisperer
+        --region us-east-2 \
+        --zip-file fileb://compressed/whisperer.zip
