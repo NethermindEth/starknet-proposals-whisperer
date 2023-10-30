@@ -17,6 +17,9 @@
 				"unifiedjs.vscode-mdx"
 			]
 		}
+	},
+	"features": {
+		"ghcr.io/devcontainers/features/aws-cli:1": {}
 	}
 
 	// Features to add to the dev container. More info: https://containers.dev/features.

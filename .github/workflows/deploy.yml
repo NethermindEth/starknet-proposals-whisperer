@@ -32,15 +32,15 @@ jobs:
     - name: Deploy to AWS Lambda
       run: |
         aws lambda update-function-configuration \
-        --function-name whisperer \
+        --function-name starknet-proposals-whisperer \
         --region us-east-2 \
         --environment Variables="{\
           SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }},\
           REPO_OWNER=${{ vars.REPO_OWNER }},\
           REPO_NAME=${{ vars.REPO_NAME }},\
           THRESHOLD_DAYS=${{ vars.THRESHOLD_DAYS }}\
-        }" \
+        }"\
         aws lambda update-function-code \
-        --function-name starknet-proposals-whisperer
+        --function-name starknet-proposals-whisperer \
         --region us-east-2 \
         --zip-file fileb://compressed/whisperer.zip
