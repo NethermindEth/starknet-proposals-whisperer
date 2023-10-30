@@ -1,0 +1,34 @@
+name: Deploy to AWS Lambda
+
+on:
+  push:
+    branches:
+      - main 
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.21.2
+
+    - name: Build and Compress
+      run: |
+        make build-linux
+
+    - name: Deploy to AWS Lambda
+      uses: appleboy/lambda-action@v0.1.9
+      with:
+        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws_region: us-east-2  # Adjust with your AWS region
+        function_name: starknet-proposals-whisperer  # Adjust with your Lambda function name
+        zip_file: compressed/whisperer.zip
+        environment: SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }},REPO_OWNER=${{ secrets.REPO_OWNER }},REPO_NAME=${{ secrets.REPO_NAME }},THRESHOLD_DAYS=1
+

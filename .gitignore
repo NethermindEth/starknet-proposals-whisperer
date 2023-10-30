@@ -19,3 +19,12 @@
 
 # Go workspace file
 go.work
+
+# Compressed folder
+compressed/
+
+# Bin folder
+bin/
+
+#env variables test script
+set-env.sh
