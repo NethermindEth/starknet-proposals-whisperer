@@ -35,7 +35,7 @@ jobs:
         aws lambda update-function-configuration \
         --function-name starknet-proposals-whisperer \
         --region us-east-2 \
-        --handler whisperer \
+        --handler bin/whisperer \
         --environment Variables="{\
         SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }},\
         REPO_OWNER=${{ vars.REPO_OWNER }},\

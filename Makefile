@@ -1,6 +1,8 @@
 build-linux:
-	env GOOS=linux GOARCH=amd64 go build -o ./bin/whisperer
-	mkdir -p compressed
+	@cp build/Dockerfile .
+	@docker build -t go-builder .
+	@rm Dockerfile
+	@docker run --rm -v "$(PWD)/bin:/go/src/github.com/NethermindEth/starknet-proposals-whisperer/bin" go-builder
 	@make compress
 
 compress:

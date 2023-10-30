@@ -24,6 +24,8 @@ The core logic of the application is written in Go and is contained in the main.
 
 The code is deployed to AWS Lambda, Angkor-Production account.
 
+> The binary is built inside an Amazon Linux 2 Docker container to ensure compatibility with the AWS Lambda environment.
+
 - AWS Region: us-east-2
 - Runtime: Go 1.x
 - Handler: main
