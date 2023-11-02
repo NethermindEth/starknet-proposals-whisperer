@@ -75,6 +75,7 @@ jobs:
           aws lambda create-function \
             --function-name starknet-proposals-whisperer \
             --package-type Image \
+            --role ${{ secrets.AWS_ROLE_ARN }} \
             --code ImageUri=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer:latest \
         else
           aws lambda update-function-code \
