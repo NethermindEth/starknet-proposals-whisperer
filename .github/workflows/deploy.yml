@@ -50,38 +50,22 @@ jobs:
         push: false
         tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/starknet-proposals-whisperer:latest
     
+        
+    - name: Update lambda configuration
+      run: |
+        aws lambda update-function-configuration \
+        --function-name starknet-proposals-whisperer \
+        --region us-east-2 \
+        --environment Variables="{\
+        SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }},\
+        REPO_OWNER=${{ vars.REPO_OWNER }},\
+        REPO_NAME=${{ vars.REPO_NAME }},\
+        THRESHOLD_DAYS=${{ vars.THRESHOLD_DAYS }}}"
+        
     - name: Update Lambda Function
       run: |
         aws lambda update-function-code \
           --function-name starknet-proposals-whisperer \
           --region us-east-2 \
           --image-uri ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/starknet-proposals-whisperer:latest
-          --environment Variables="{\
-          SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }},\
-          REPO_OWNER=${{ vars.REPO_OWNER }},\
-          REPO_NAME=${{ vars.REPO_NAME }},\
-          THRESHOLD_DAYS=${{ vars.THRESHOLD_DAYS }}}"
-
-
-    # - name: Build and Compress
-    #   run: |
-    #       make build-linux
-
-    # - name: Update lambda configuration
-    #   run: |
-    #     aws lambda update-function-configuration \
-    #     --function-name starknet-proposals-whisperer \
-    #     --region us-east-2 \
-    #     --handler bin/whisperer \
-    #     --environment Variables="{\
-    #     SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }},\
-    #     REPO_OWNER=${{ vars.REPO_OWNER }},\
-    #     REPO_NAME=${{ vars.REPO_NAME }},\
-    #     THRESHOLD_DAYS=${{ vars.THRESHOLD_DAYS }}}"
-
-    # - name: Deploy to AWS Lambda
-    #   run: |
-    #       aws lambda update-function-code \
-    #       --function-name starknet-proposals-whisperer \
-    #       --region us-east-2 \
-    #       --zip-file fileb://compressed/whisperer.zip
+          
