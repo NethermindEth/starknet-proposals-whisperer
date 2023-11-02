@@ -6,6 +6,8 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  AWS_REGION: ${{ env.AWS_REGION }}
 
 jobs:
   deploy:
@@ -34,21 +36,31 @@ jobs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-region: us-east-2
+        aws-region: ${{ env.AWS_REGION }}
         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
         role-duration-seconds: 1200  # Set the session duration as needed
         role-session-name: GitHubActions
 
+    # - name: Login to Amazon ECR
+    #   id: login-ecr
+    #   uses: aws-actions/amazon-ecr-login@v2
+
+    # - name: Build and Push Docker image
+    #   uses: docker/build-push-action@v2
+    #   with:
+    #     context: .
+    #     push: true 
+    #     tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer:latest
+
     - name: Login to Amazon ECR
       id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2
+      run: |
+        aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
 
     - name: Build and Push Docker image
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        push: true 
-        tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/starknet-proposals-whisperer:latest
+      run: |
+        docker buildx -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer:latest .
+        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer:latest
 
     - name: Check if Lambda function exists
       id: check-function
@@ -62,19 +74,19 @@ jobs:
           aws lambda create-function \
             --function-name starknet-proposals-whisperer \
             --package-type Image \
-            --code ImageUri=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/starknet-proposals-whisperer:latest \
+            --code ImageUri=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer:latest \
         else
           aws lambda update-function-code \
             --function-name starknet-proposals-whisperer \
-            --image-uri ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/starknet-proposals-whisperer:latest \
-            --region us-east-2 
+            --image-uri ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer:latest \
+            --region ${{ env.AWS_REGION }} 
         fi
         
     - name: Update lambda configuration
       run: |
         aws lambda update-function-configuration \
         --function-name starknet-proposals-whisperer \
-        --region us-east-2 \
+        --region ${{ env.AWS_REGION }} \
         --environment Variables="{\
         SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }},\
         REPO_OWNER=${{ vars.REPO_OWNER }},\
