@@ -47,9 +47,28 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         context: .
-        push: false
+        push: true 
         tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/starknet-proposals-whisperer:latest
-    
+
+    - name: Check if Lambda function exists
+      id: check-function
+      run: |
+        FUNCTION_EXISTS=$(aws lambda get-function --function-name starknet-proposals-whisperer || echo "not-exist")
+        echo "{FUNCTION_EXISTS}={$FUNCTION_EXISTS}" >> $GITHUB_ENV
+
+    - name: Create or Update Lambda function
+      run: |
+        if [[ "$FUNCTION_EXISTS" == "not-exist" ]]; then
+          aws lambda create-function \
+            --function-name starknet-proposals-whisperer \
+            --package-type Image \
+            --code ImageUri=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/starknet-proposals-whisperer:latest \
+        else
+          aws lambda update-function-code \
+            --function-name starknet-proposals-whisperer \
+            --image-uri ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/starknet-proposals-whisperer:latest \
+            --region us-east-2 
+        fi
         
     - name: Update lambda configuration
       run: |
@@ -61,11 +80,4 @@ jobs:
         REPO_OWNER=${{ vars.REPO_OWNER }},\
         REPO_NAME=${{ vars.REPO_NAME }},\
         THRESHOLD_DAYS=${{ vars.THRESHOLD_DAYS }}}"
-        
-    - name: Update Lambda Function
-      run: |
-        aws lambda update-function-code \
-          --function-name starknet-proposals-whisperer \
-          --region us-east-2 \
-          --image-uri ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/starknet-proposals-whisperer:latest
-          
+
