@@ -39,7 +39,7 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
         role-duration-seconds: 1200  # Set the session duration as needed
-        role-session-name: GitHubActions
+        role-session-name: StarknetProposalsWhispererGithubAction 
 
     # - name: Login to Amazon ECR
     #   id: login-ecr
@@ -67,7 +67,7 @@ jobs:
       id: check-function
       run: |
         FUNCTION_EXISTS=$(aws lambda get-function --function-name starknet-proposals-whisperer || echo "not-exist")
-        echo "{FUNCTION_EXISTS}={$FUNCTION_EXISTS}" >> $GITHUB_ENV
+        echo "FUNCTION_EXISTS=$FUNCTION_EXISTS" >> $GITHUB_ENV
 
     - name: Create or Update Lambda function
       run: |
