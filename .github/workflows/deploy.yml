@@ -59,8 +59,8 @@ jobs:
 
     - name: Build and Push Docker image
       run: |
-        docker buildx build --tag ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer:latest .
-        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer:latest
+        docker buildx build --tag ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer:latest . --push
+
 
     - name: Check if Lambda function exists
       id: check-function
