@@ -31,18 +31,25 @@ jobs:
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v3
 
+      
+    - name: Check if S3 bucket exists
+      id: check-bucket
+      run: |
+        EXISTS=$(aws s3 ls | grep -q 'starknet-proposals-whisperer-s3' && echo 'true' || echo 'false')
+        echo "BUCKET_EXISTS=$EXISTS" >> $GITHUB_ENV
+      
+    - name: Create S3 backend
+      if: ${{ env.BUCKET_EXISTS == 'false' }}
+      run: |
+        cd terraform/init-backend
+        terraform init
+        terraform apply -auto-approve
+
     - name: Check if Lambda function exists
       id: check-function
       run: |
         FUNCTION_EXISTS=$(aws lambda get-function --function-name starknet-proposals-whisperer || echo "false")
         echo "FUNCTION_EXISTS=$FUNCTION_EXISTS" >> $GITHUB_ENV
-  
-    - name: Create S3 backend (won't do anything if already exists)
-      if: ${{ env.FUNCTION_EXISTS == 'false' }}
-      run: |
-        cd terraform/init-backend
-        terraform init
-        terraform apply -auto-approve
 
     - name: Deploy ECR and Lambda
       if: ${{ env.FUNCTION_EXISTS == 'false' }}
