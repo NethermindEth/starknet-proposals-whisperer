@@ -42,7 +42,7 @@ jobs:
       run: |
         cd terraform/init-backend
         terraform init
-        terraform apply -auto-approve -var "region=${{ env.AWS_REGION }}"
+        terraform apply -auto-approve
 
     - name: Deploy ECR and Lambda
       if: ${{ env.FUNCTION_EXISTS == 'false' }}
