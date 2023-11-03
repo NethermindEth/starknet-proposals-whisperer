@@ -12,7 +12,7 @@ data "aws_iam_policy_document" "lambda_policy" {
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ]
-    resources = ["*"]
+    resources = ["arn:aws:logs:*:*:*"]
   }
 }
 
