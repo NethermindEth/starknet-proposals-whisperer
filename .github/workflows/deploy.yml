@@ -71,7 +71,7 @@ jobs:
     - name: Check if Lambda function exists
       id: check-function
       run: |
-        EXISTS=$(aws lambda get-function --function-name starknet-proposals-whisperer && echo 'true' || echo "false")
+        EXISTS=$(aws lambda get-function --function-name starknet-proposals-whisperer > /dev/null 2>&1 && echo 'true' || echo "false")
         echo "FUNCTION_EXISTS=$EXISTS" >> $GITHUB_ENV
   
     - name: Deploy Lambda
