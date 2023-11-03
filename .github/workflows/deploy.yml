@@ -45,7 +45,14 @@ jobs:
         terraform init
         terraform apply -auto-approve
 
+    - name: Check if ECR repository exists
+      id : check-repository
+      run: |
+        EXISTS=$(aws ecr describe-repositories --repository-names starknet-proposals-whisperer | grep -q 'starknet-proposals-whisperer' && echo 'true' || echo 'false')
+        echo "REPOSITORY_EXISTS=$EXISTS" >> $GITHUB_ENV
+
     - name: Deploy ECR
+      if : ${{ env.REPOSITORY_EXISTS == 'false' }}
       run: |
         cd terraform/ecr
         terraform init
