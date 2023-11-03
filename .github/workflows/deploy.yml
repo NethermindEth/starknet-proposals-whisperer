@@ -83,13 +83,16 @@ jobs:
         sleep 60 # Wait for the lambda to be created
 
     - name: Update Lambda function
+      if: ${{ env.FUNCTION_EXISTS != 'false' }}
       run: |
           aws lambda update-function-code \
             --function-name starknet-proposals-whisperer \
             --image-uri ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer:latest \
             --region ${{ env.AWS_REGION }} 
+            sleep 60 # Wait for the lambda to be updated
         
     - name: Update lambda configuration
+      if: ${{ env.FUNCTION_EXISTS != 'false' }}
       run: |
         aws lambda update-function-configuration \
         --function-name starknet-proposals-whisperer \
