@@ -21,7 +21,19 @@ var (
 	threshold       = os.Getenv("THRESHOLD_DAYS")
 )
 
-func HandleRequest(ctx context.Context, in interface{}) {
+type EventBridgeEvent struct {
+	Version    string                 `json:"version"`
+	ID         string                 `json:"id"`
+	DetailType string                 `json:"detail-type"`
+	Source     string                 `json:"source"`
+	Account    string                 `json:"account"`
+	Time       string                 `json:"time"`
+	Region     string                 `json:"region"`
+	Resources  []string               `json:"resources"`
+	Detail     map[string]interface{} `json:"detail"`
+}
+
+func HandleRequest(ctx context.Context, event EventBridgeEvent) {
 	client := github.NewClient(nil) // No authentication
 
 	now := time.Now()
@@ -53,6 +65,9 @@ func HandleRequest(ctx context.Context, in interface{}) {
 			sendSlackNotification(pr)
 		}
 	}
+
+	eventJSON, _ := json.MarshalIndent(event, "", "  ")
+	fmt.Println(string(eventJSON))
 }
 
 func sendSlackNotification(pr *github.PullRequest) {

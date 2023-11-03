@@ -49,6 +49,7 @@ resource "aws_lambda_function" "starknet-proposals-whisperer" {
   function_name = var.project-name
   role          = aws_iam_role.lambda-role.arn
   image_uri     = "${var.ecr-repository-name}:latest"
+  description = "Lambda function for starknet-proposals-whisperer slack bot"
   tags          = local.tags
 
   package_type = "Image"

@@ -30,3 +30,5 @@ bin/
 set-env.sh
 
 .terraform*
+my.secrets
+my.variables
