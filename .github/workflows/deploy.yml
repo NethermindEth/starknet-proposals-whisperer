@@ -80,6 +80,7 @@ jobs:
         cd terraform/lambda
         terraform init
         terraform apply -auto-approve -var "ecr-repository-name=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer"
+        sleep 60 # Wait for the lambda to be created
 
     - name: Update Lambda function
       run: |
