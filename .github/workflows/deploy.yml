@@ -20,19 +20,6 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    # - # Add support for more platforms with QEMU (optional)
-    #   # https://github.com/docker/setup-qemu-action
-    #   name: Set up QEMU
-    #   uses: docker/setup-qemu-action@v3
-      
-    # - name: Set up Docker Buildx
-    #   uses: docker/setup-buildx-action@v3
-
-    # - name: Set up Go
-    #   uses: actions/setup-go@v3
-    #   with:
-    #     go-version: 1.21.2
-
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -41,16 +28,29 @@ jobs:
         role-duration-seconds: 1200  # Set the session duration as needed
         role-session-name: StarknetProposalsWhispererGithubAction 
 
-    # - name: Login to Amazon ECR
-    #   id: login-ecr
-    #   uses: aws-actions/amazon-ecr-login@v2
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v3
 
-    # - name: Build and Push Docker image
-    #   uses: docker/build-push-action@v2
-    #   with:
-    #     context: .
-    #     push: true 
-    #     tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer:latest
+    - name: Check if Lambda function exists
+      id: check-function
+      run: |
+        FUNCTION_EXISTS=$(aws lambda get-function --function-name starknet-proposals-whisperer || echo "false")
+        echo "FUNCTION_EXISTS=$FUNCTION_EXISTS" >> $GITHUB_ENV
+  
+    - name: Create S3 backend (won't do anything if already exists)
+      if: ${{ env.FUNCTION_EXISTS == 'false' }}
+      run: |
+        cd terraform/init-backend
+        terraform init
+        terraform apply -auto-approve -var "region=${{ env.AWS_REGION }}"
+
+    - name: Deploy ECR and Lambda
+      if: ${{ env.FUNCTION_EXISTS == 'false' }}
+      run: |
+        cd terraform
+        terraform init
+        terraform validate
+        terraform apply -auto-approve
 
     - name: Login to Amazon ECR
       id: login-ecr
@@ -62,27 +62,12 @@ jobs:
         docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer:latest .
         docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer:latest 
 
-
-    - name: Check if Lambda function exists
-      id: check-function
+    - name: Update Lambda function
       run: |
-        FUNCTION_EXISTS=$(aws lambda get-function --function-name starknet-proposals-whisperer || echo "not-exist")
-        echo "FUNCTION_EXISTS=$FUNCTION_EXISTS" >> $GITHUB_ENV
-
-    - name: Create or Update Lambda function
-      run: |
-        if [[ "$FUNCTION_EXISTS" == "not-exist" ]]; then
-          aws lambda create-function \
-            --function-name starknet-proposals-whisperer \
-            --package-type Image \
-            --role ${{ secrets.AWS_ROLE_ARN }} \
-            --code ImageUri=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer:latest
-        else
           aws lambda update-function-code \
             --function-name starknet-proposals-whisperer \
             --image-uri ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer:latest \
             --region ${{ env.AWS_REGION }} 
-        fi
         
     - name: Update lambda configuration
       run: |
