@@ -1,5 +1,8 @@
 resource "aws_ecr_repository" "starknet-proposals-whisperer-repo" {
-  name = var.project_name 
+  name = var.project_name
+  tags = {
+    "Project": "nubia-slack-bot"
+  }
 }
 
 data "aws_iam_policy_document" "lambda_policy" {
@@ -22,6 +25,9 @@ resource "aws_lambda_function" "starknet-proposals-whisperer" {
   function_name = var.project_name
   role          = aws_iam_role.lambda_role.arn
   image_uri     = "${aws_ecr_repository.starknet-proposals-whisperer-repo.repository_url}:latest"
+  tags = {
+    "Project": "nubia-slack-bot"
+  }
 
   package_type = "Image"
 }
