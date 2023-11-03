@@ -45,18 +45,10 @@ jobs:
         terraform init
         terraform apply -auto-approve
 
-    - name: Check if Lambda function exists
-      id: check-function
+    - name: Deploy ECR
       run: |
-        FUNCTION_EXISTS=$(aws lambda get-function --function-name starknet-proposals-whisperer || echo "false")
-        echo "FUNCTION_EXISTS=$FUNCTION_EXISTS" >> $GITHUB_ENV
-
-    - name: Deploy ECR and Lambda
-      if: ${{ env.FUNCTION_EXISTS == 'false' }}
-      run: |
-        cd terraform
+        cd terraform/ecr
         terraform init
-        terraform validate
         terraform apply -auto-approve
 
     - name: Login to Amazon ECR
@@ -68,6 +60,19 @@ jobs:
       run: |
         docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer:latest .
         docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer:latest 
+
+    - name: Check if Lambda function exists
+      id: check-function
+      run: |
+        FUNCTION_EXISTS=$(aws lambda get-function --function-name starknet-proposals-whisperer || echo "false")
+        echo "FUNCTION_EXISTS=$FUNCTION_EXISTS" >> $GITHUB_ENV
+  
+    - name: Deploy Lambda
+      if: ${{ env.FUNCTION_EXISTS == 'false' }}
+      run: |
+        cd terraform/lambda
+        terraform init
+        terraform apply -auto-approve -var "ecr-repository-name=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/starknet-proposals-whisperer"
 
     - name: Update Lambda function
       run: |
