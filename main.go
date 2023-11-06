@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -18,7 +17,7 @@ var (
 	slackWebhookURL = os.Getenv("SLACK_WEBHOOK_URL")
 	repoOwner       = os.Getenv("REPO_OWNER")
 	repoName        = os.Getenv("REPO_NAME")
-	threshold       = os.Getenv("THRESHOLD_DAYS")
+	threshold       = os.Getenv("THRESHOLD_DAYS") // Not used anymore
 )
 
 type EventBridgeEvent struct {
@@ -33,10 +32,9 @@ type EventBridgeEvent struct {
 	Detail     map[string]interface{} `json:"detail"`
 }
 
-func HandleRequest(ctx context.Context, event interface{}) {
+func HandleRequest(ctx context.Context, in EventBridgeEvent) {
 	client := github.NewClient(nil) // No authentication
-
-	now := time.Now()
+	fmt.Println(in)
 
 	opt := &github.PullRequestListOptions{
 		State: "open",
@@ -51,13 +49,34 @@ func HandleRequest(ctx context.Context, event interface{}) {
 		return
 	}
 
-	days, err := strconv.Atoi(threshold)
-	if err != nil {
-		fmt.Println("Error parsing DAYS_DURATION:", err)
-		return
-	}
+	// Parse EventsBridge time
+	now, err := time.Parse(time.RFC3339, in.Time)
 
-	thresholdDuration := time.Duration(days) * 24 * time.Hour
+	// The Lambda is triggered every day at 10am UTC and 5pm UTC
+	// PRs should be checked between the time the Lambda is triggered
+	// and the time it was triggered the last time.
+	type threshold struct {
+		time              time.Time
+		thresholdDuration time.Duration
+	}
+	times := []threshold{
+		{
+			time.Date(now.Year(), now.Month(), now.Day(), 10, 0, 0, 0, time.UTC),
+			17 * time.Hour, // 17 hours after 5pm UTC
+		},
+		{
+			time.Date(now.Year(), now.Month(), now.Day(), 17, 0, 0, 0, time.UTC),
+			7 * time.Hour, // 7 hours after 10am UTC
+		},
+	}
+	var thresholdDuration time.Duration
+	//thresholdDuration := time.Duration(days) * 24 * time.Hour
+	for _, t := range times {
+		if now.Before(t.time) || now.Equal(t.time) {
+			thresholdDuration = t.thresholdDuration
+			break
+		}
+	}
 
 	for _, pr := range prs {
 		prCreatedAt := pr.GetCreatedAt()
@@ -66,8 +85,6 @@ func HandleRequest(ctx context.Context, event interface{}) {
 		}
 	}
 
-	eventJSON, _ := json.MarshalIndent(event, "", "  ")
-	fmt.Println(string(eventJSON))
 }
 
 func sendSlackNotification(pr *github.PullRequest) {
