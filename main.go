@@ -33,7 +33,7 @@ type EventBridgeEvent struct {
 	Detail     map[string]interface{} `json:"detail"`
 }
 
-func HandleRequest(ctx context.Context, event EventBridgeEvent) {
+func HandleRequest(ctx context.Context, event interface{}) {
 	client := github.NewClient(nil) // No authentication
 
 	now := time.Now()
